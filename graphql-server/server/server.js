@@ -1,85 +1,93 @@
 console.log({ starting: true });
 
-import express from 'express';
-import basicAuth from 'basic-auth-connect';
+const express = require("express");
+const cors = require("cors");
+
+// import express from "express";
+import basicAuth from "basic-auth-connect";
 
 const app = express();
+app.use(cors());
 
-import graphqlHTTP from 'express-graphql';
-import { GraphQLSchema, GraphQLObjectType, GraphQLString,
-  GraphQLNonNull, GraphQLID, GraphQLEnumType } from 'graphql';
-
+import graphqlHTTP from "express-graphql";
 import {
-  NodeInterface,
-  UserType,
-  PostType
-} from './src/types';
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLEnumType,
+} from "graphql";
 
-import * as loaders from './src/loaders';
+import { NodeInterface, UserType, PostType } from "./src/types";
+
+import * as loaders from "./src/loaders";
 
 const RootQuery = new GraphQLObjectType({
-  name: 'RootQuery',
-  description: 'The root query',
+  name: "RootQuery",
+  description: "The root query",
   fields: {
     viewer: {
       type: NodeInterface,
       resolve(source, args, context) {
         return loaders.getNodeById(context);
-      }
+      },
     },
     node: {
       type: NodeInterface,
       args: {
         id: {
-          type: new GraphQLNonNull(GraphQLID)
-        }
+          type: new GraphQLNonNull(GraphQLID),
+        },
       },
       resolve(source, args, context, info) {
         return loaders.getNodeById(args.id);
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 const LevelEnum = new GraphQLEnumType({
-  name: 'PrivacyLevel',
+  name: "PrivacyLevel",
   values: {
     PUBLIC: {
-      value: 'public'
+      value: "public",
     },
     ACQUAINTANCE: {
-      value: 'acquaintance'
+      value: "acquaintance",
     },
     FRIEND: {
-      value: 'friend'
+      value: "friend",
     },
     TOP: {
-      value: 'top'
-    }
-  }
+      value: "top",
+    },
+  },
 });
 
 const RootMutation = new GraphQLObjectType({
-  name: 'RootMutation',
-  description: 'The root mutation',
+  name: "RootMutation",
+  description: "The root mutation",
   fields: {
     createPost: {
       type: PostType,
       args: {
         body: {
-          type: new GraphQLNonNull(GraphQLString)
+          type: new GraphQLNonNull(GraphQLString),
         },
         level: {
           type: new GraphQLNonNull(LevelEnum),
-        }
+        },
       },
       resolve(source, args, context) {
-        return loaders.createPost(args.body, args.level, context).then((nodeId) => {
-          return loaders.getNodeById(nodeId);
-        });
-      }
-    }
-  }
+        return loaders
+          .createPost(args.body, args.level, context)
+          .then((nodeId) => {
+            return loaders.getNodeById(nodeId);
+          });
+      },
+    },
+  },
 });
 
 const Schema = new GraphQLSchema({
@@ -88,16 +96,21 @@ const Schema = new GraphQLSchema({
   mutation: RootMutation,
 });
 
-app.use(basicAuth(function(user, pass) {
-  return pass === 'mypassword1';
-}));
+app.use(
+  basicAuth(function (user, pass) {
+    return pass === "mypassword1";
+  })
+);
 
-app.use('/graphql', graphqlHTTP((req) => {
-  const context = 'users:' + req.user;
-  return { schema: Schema, graphiql: true, context: context, pretty: true };
-}));
+app.use(
+  "/graphql",
+  graphqlHTTP((req) => {
+    const context = "users:" + req.user;
+    return { schema: Schema, graphiql: true, context: context, pretty: true };
+  })
+);
 
 app.listen(3000, () => {
   console.log({ running: true });
-  console.log('The password is: mypassword1');
+  console.log("The password is: mypassword1");
 });

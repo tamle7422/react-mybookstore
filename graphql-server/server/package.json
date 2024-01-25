@@ -21,6 +21,7 @@
     "graphql": "0.6.0",
     "graphql-relay": "0.4.1",
     "sql": "0.67.0",
-    "sqlite3": "3.1.8"
+    "sqlite3": "5.1.7",
+    "cors": "2.8.5"
   }
 }
